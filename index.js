@@ -1,39 +1,40 @@
-import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import cors from 'cors';
-
+const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3000;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Middleware
+app.use(bodyParser.json());
 
-const DATA_FILE = path.join(__dirname, 'data', 'tournaments.json');
+// Dummy data (minta)
+let tournaments = [
+    { id: 1, name: 'FIFA 2022', year: 2022 },
+    { id: 2, name: 'FIFA 2026', year: 2026 },
+];
 
-app.use(cors());
-app.use(express.json());
-
+// API végpontok
 app.get('/api/tournaments', (req, res) => {
-  fs.readFile(DATA_FILE, 'utf8', (err, data) => {
-    if (err) return res.status(500).send('Error reading data file');
-    res.json(JSON.parse(data));
-  });
+    res.json(tournaments);
 });
 
 app.post('/api/tournaments', (req, res) => {
-  fs.readFile(DATA_FILE, 'utf8', (err, data) => {
-    if (err) return res.status(500).send('Error reading data file');
-    const tournaments = JSON.parse(data);
-    tournaments.push(req.body);
-    fs.writeFile(DATA_FILE, JSON.stringify(tournaments, null, 2), (err) => {
-      if (err) return res.status(500).send('Error writing data file');
-      res.status(201).send('Tournament added');
-    });
-  });
+    const { name, year } = req.body;
+    const newTournament = {
+        id: tournaments.length + 1,
+        name,
+        year,
+    };
+    tournaments.push(newTournament);
+    res.status(201).json(newTournament);
 });
 
+app.post('/api/results', (req, res) => {
+    const { team1Name, team2Name, team1Score, team2Score } = req.body;
+    // Eredmények kezelése itt (lehet adatbázisba mentés)
+    res.status(201).json({ message: "Eredmény sikeresen felvéve!" });
+});
+
+// Server indítása
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+    console.log(`Server running on port ${port}`);
 });
